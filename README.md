@@ -1,4 +1,4 @@
-# 🤖 Agentic Profile Manager
+# 🤖 Agentic Profile Manager 
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Stateful_Agents-orange)](https://python.langchain.com/docs/langgraph)
