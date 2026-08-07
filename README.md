@@ -1,4 +1,3 @@
-$readmeContent = @'
 # 🤖 Agentic Profile Manager
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -19,21 +18,14 @@ Using Redis as a message broker and Pub/Sub streaming, the architecture allows L
 
 The application is structured as a scalable monorepo, separating concerns between HTTP handling and heavy LLM orchestration.
 
-```mermaid
-graph TD
-    User[User / Browser] -->|1. Uploads PDF| API[Flask API Gateway]
-    API -->|2. Enqueues Task| Queue[(Redis Task Queue)]
-    API <-->|5. SSE Stream| PubSub[(Redis Pub/Sub)]
-    
-    Worker[LangGraph Python Worker] -->|3. Polls for Tasks| Queue
-    Worker -->|4. Streams Logs| PubSub
-    
-    subgraph Agentic Pipeline
-        Worker --> A1[Agent 1: Data Extraction]
-        A1 --> A2[Agent 2: Tailwind Generation]
-        A2 --> A3[Agent 3: GitHub/Vercel CI/CD]
-    end
-🧠 The AgentsThe Parser (Agent 1): Extracts text from raw PDFs. It is heavily prompted to filter specific domains (e.g., emphasizing Data Engineering architectures while aggressively stripping out irrelevant test automation workflows) to ensure highly targeted profile generation.The Generator (Agent 2): Takes the structured JSON payload and engineers a fully responsive, dark-themed Tailwind CSS single-page application.The Deployer (Agent 3): Handles OAuth tokens to dynamically create GitHub repositories, commit source code, and trigger live Vercel deployments.📂 Directory StructurePlaintextagentic-profile-manager/
+### 🧠 The Agents
+1. **The Parser (Agent 1):** Extracts text from raw PDFs. It is heavily prompted to filter specific domains (e.g., emphasizing Data Engineering architectures while aggressively stripping out irrelevant test automation workflows) to ensure highly targeted profile generation.
+2. **The Generator (Agent 2):** Takes the structured JSON payload and engineers a fully responsive, dark-themed Tailwind CSS single-page application.
+3. **The Deployer (Agent 3):** Handles OAuth tokens to dynamically create GitHub repositories, commit source code, and trigger live Vercel deployments.
+
+## 📂 Directory Structure
+
+agentic-profile-manager/
 ├── .github/workflows/      # Automated CI/CD pipelines (AWS ECS)
 ├── shared/                 # Common configuration and file I/O utilities
 ├── web/                    # API Gateway (Flask, SSE streaming, OAuth)
@@ -45,10 +37,64 @@ graph TD
 ├── uploads/                # Ephemeral volume for incoming files
 ├── docker-compose.yml      # Local infrastructure orchestration
 └── requirements.txt        # Shared Python dependencies
-⚙️ Environment VariablesCreate a .env file in the root directory. The application requires the following configurations to boot:VariableDescriptionRequiredFLASK_SECRET_KEYCryptographic key for securing session cookies.YesREDIS_HOSTHostname for the Redis broker (default: localhost).YesREDIS_PORTPort for the Redis broker (default: 6379).YesGOOGLE_API_KEYGemini API key for LLM orchestration.YesGITHUB_CLIENT_IDOAuth Client ID for GitHub integration.OptionalGITHUB_CLIENT_SECRETOAuth Client Secret for GitHub integration.OptionalVERCEL_CLIENT_IDOAuth Client ID for Vercel deployment.OptionalVERCEL_CLIENT_SECRETOAuth Client Secret for Vercel deployment.Optional🚀 Local Development SetupPrerequisitesPython 3.11+Docker (for running the local Redis broker)1. Install DependenciesBashpython -m venv venv
+
+## ⚙️ Environment Variables
+
+Create a `.env` file in the root directory. The application requires the following configurations to boot:
+
+| Variable | Description | Required |
+| :--- | :--- | :---: |
+| `FLASK_SECRET_KEY` | Cryptographic key for securing session cookies. | **Yes** |
+| `REDIS_HOST` | Hostname for the Redis broker (default: `localhost`). | **Yes** |
+| `REDIS_PORT` | Port for the Redis broker (default: `6379`). | **Yes** |
+| `GOOGLE_API_KEY` | Gemini API key for LLM orchestration. | **Yes** |
+| `GITHUB_CLIENT_ID` | OAuth Client ID for GitHub integration. | Optional |
+| `GITHUB_CLIENT_SECRET` | OAuth Client Secret for GitHub integration. | Optional |
+| `VERCEL_CLIENT_ID` | OAuth Client ID for Vercel deployment. | Optional |
+| `VERCEL_CLIENT_SECRET` | OAuth Client Secret for Vercel deployment. | Optional |
+
+## 🚀 Local Development Setup
+
+### Prerequisites
+* Python 3.11+
+* Docker (for running the local Redis broker)
+
+### 1. Install Dependencies
+python -m venv venv
 source venv/bin/activate  # On Windows use: venv\Scripts\activate
 pip install -r requirements.txt
-2. Start the Message BrokerBashdocker run -d -p 6379:6379 --name local-redis redis
-3. Start the Background Worker (Terminal 1)The worker runs a continuous while-loop, blocking until a task appears in the Redis queue.Bashpython -m workers.main
-4. Start the API Gateway (Terminal 2)The web server handles incoming requests and SSE (Server-Sent Events) log streaming.Bashpython -m web.app
-Navigate to http://127.0.0.1:5000 to access the application.☁️ Cloud Deployment (AWS ECS Fargate)This repository includes a fully configured GitHub Actions workflow (.github/workflows/aws-ecs-deploy.yml) to deploy the architecture to AWS.How it works:Upon pushing to the main branch, the workflow triggers.It builds two separate Docker images (web and worker).Images are pushed to Amazon ECR.The workflow updates the Amazon ECS task definitions and forces a rolling redeployment of the Fargate clusters.🐛 TroubleshootingModuleNotFoundError: No module named 'shared'Cause: Python is treating the subdirectory as the root.Fix: Always run the applications as modules from the project root using the -m flag (e.g., python -m workers.main).Agents reusing old resume data on new uploads:Cause: LangGraph's MemorySaver requires unique thread_id parameters to isolate states.Fix: Ensure the Flask API generates a new uuid.uuid4() for the thread_id on every POST request to /upload-and-generate, decoupling it from the persistent browser session_id.Built with LangGraph, Flask, and Redis.'@
+
+### 2. Start the Message Broker
+docker run -d -p 6379:6379 --name local-redis redis
+
+### 3. Start the Background Worker (Terminal 1)
+The worker runs a continuous while-loop, blocking until a task appears in the Redis queue.
+python -m workers.main
+
+### 4. Start the API Gateway (Terminal 2)
+The web server handles incoming requests and SSE (Server-Sent Events) log streaming.
+python -m web.app
+
+Navigate to `http://127.0.0.1:5000` to access the application.
+
+## ☁️ Cloud Deployment (AWS ECS Fargate)
+
+This repository includes a fully configured GitHub Actions workflow (`.github/workflows/aws-ecs-deploy.yml`) to deploy the architecture to AWS.
+
+**How it works:**
+1. Upon pushing to the `main` branch, the workflow triggers.
+2. It builds two separate Docker images (`web` and `worker`).
+3. Images are pushed to **Amazon ECR**.
+4. The workflow updates the **Amazon ECS** task definitions and forces a rolling redeployment of the Fargate clusters.
+
+## 🐛 Troubleshooting
+
+* **ModuleNotFoundError: No module named 'shared'**
+  * *Cause:* Python is treating the subdirectory as the root.
+  * *Fix:* Always run the applications as modules from the project root using the `-m` flag (e.g., `python -m workers.main`).
+* **Agents reusing old resume data on new uploads:**
+  * *Cause:* LangGraph's `MemorySaver` requires unique `thread_id` parameters to isolate states.
+  * *Fix:* Ensure the Flask API generates a new `uuid.uuid4()` for the `thread_id` on every POST request to `/upload-and-generate`, decoupling it from the persistent browser `session_id`.
+
+---
+*Built with LangGraph, Flask, and Redis.*
