@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Profile Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-8 flex flex-col items-center">
+    <div class="w-full max-w-3xl bg-gray-800 rounded-lg shadow-lg p-6">
+        <h1 class="text-3xl font-bold mb-4">🤖 Agentic Profile Manager</h1>
+        <p class="text-gray-400 mb-8">Upload your resume to trigger the multi-agent pipeline.</p>
+
+        <div class="flex space-x-4 mb-4">
+            {% if session.get('github_token') %}
+            <div class="bg-green-700 px-4 py-2 rounded font-semibold border border-green-600 text-white cursor-default">
+                ✅ GitHub Connected
+            </div>
+            {% else %}
+            <a href="/login/github" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-semibold transition border border-gray-600">
+                🐙 Connect GitHub
+            </a>
+            {% endif %}
+
+            {% if session.get('vercel_token') %}
+            <div class="bg-blue-600 px-4 py-2 rounded font-semibold border border-blue-500 text-white cursor-default">
+                ✅ Vercel Connected
+            </div>
+            {% else %}
+            <a href="/login/vercel" class="bg-black hover:bg-gray-800 px-4 py-2 rounded font-semibold transition border border-gray-600 text-white">
+                ▲ Connect Vercel
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="mt-8 bg-gray-800 p-6 rounded-lg border border-gray-700 w-full">
+            <h2 class="text-xl font-semibold text-white mb-4">Upload Your Resume</h2>
+            <form id="uploadForm" class="flex flex-col space-y-4">
+                <input type="file" name="resume" accept=".pdf" required class="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
+                <button type="submit" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded w-48 transition">
+                    Start AI Pipeline
+                </button>
+            </form>
+            <div class="flex space-x-4 mt-4">
+                <button id="approveBtn" onclick="approveDeployment()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded font-semibold transition hidden">
+                    Approve & Deploy
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-black p-4 rounded-md h-48 overflow-y-auto font-mono text-sm my-8 border border-gray-700" id="logConsole">
+            <div class="text-gray-500">> System Ready...</div>
+        </div>
+
+        <h2 class="text-xl font-semibold mb-2">Visual Preview (HITL Check)</h2>
+        <div class="bg-gray-900 p-2 rounded-md h-[32rem] overflow-hidden border border-gray-700">
+            <iframe id="codePreview" class="w-full h-full bg-white rounded-sm" srcdoc="<div style='display:flex; justify-content:center; align-items:center; height:100%; color:gray; font-family:sans-serif;'>Waiting for generation...</div>"></iframe>
+        </div>
+
+        <div id="feedbackSection" class="mt-4 hidden flex space-x-2 w-full">
+            <input type="text" id="feedbackInput" placeholder="e.g., Change background to dark blue..." class="flex-1 bg-gray-800 text-white border border-gray-600 rounded px-4 py-2 text-sm focus:outline-none focus:border-purple-500">
+            <button id="regenerateBtn" onclick="regeneratePortfolio()" class="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded font-semibold transition text-white">
+                ✨ Regenerate
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let generatedHTMLCode = "";
+        let eventSource = null;
+
+        function appendLog(msg, isSuccess = false, isError = false) {
+            const consoleBox = document.getElementById('logConsole');
+            const div = document.createElement('div');
+            if (isSuccess) div.className = 'text-green-400 font-bold';
+            else if (isError) div.className = 'text-red-400 font-bold';
+            else div.className = 'text-blue-300';
+            div.textContent = `> ${msg}`;
+            consoleBox.appendChild(div);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        function listenToSSE() {
+            if (eventSource) eventSource.close();
+            eventSource = new EventSource('/stream');
+            eventSource.onmessage = function(e) {
+                const payload = JSON.parse(e.data);
+                if (payload.type === 'log') {
+                    appendLog(payload.data.message);
+                } else if (payload.type === 'complete') {
+                    appendLog("Pipeline Execution Complete!", true);
+                    generatedHTMLCode = payload.data.html;
+                    document.getElementById('codePreview').srcdoc = generatedHTMLCode;
+                    document.getElementById('feedbackSection').classList.remove('hidden');
+                    document.getElementById('approveBtn').classList.remove('hidden');
+                } else if (payload.type === 'error') {
+                    appendLog("Error: " + payload.data.message, false, true);
+                }
+            };
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            listenToSSE();
+            appendLog("Uploading file & enqueuing task...", true);
+            const formData = new FormData(this);
+            const res = await fetch('/upload-and-generate', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.status === 'queued') {
+                appendLog("Task queued. Workers processing...");
+            } else {
+                appendLog("Failed to queue: " + data.error, false, true);
+            }
+        });
+
+        async function regeneratePortfolio() {
+            const feedback = document.getElementById('feedbackInput').value.trim();
+            if (!feedback) return;
+            appendLog(`Enqueuing regeneration feedback: "${feedback}"`, true);
+            const res = await fetch('/regenerate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ feedback: feedback, current_html: generatedHTMLCode })
+            });
+            const data = await res.json();
+            if (data.status === 'queued') {
+                document.getElementById('feedbackInput').value = "";
+            }
+        }
+
+        async function approveDeployment() {
+            appendLog("Approving deployment to GitHub & Vercel...", true);
+            const res = await fetch('/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ html: generatedHTMLCode })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                appendLog("Live Deployment Successful! 🚀", true);
+                document.getElementById('codePreview').srcdoc = `<div style='padding:20px; text-align:center;'><h2>🎉 Deployed!</h2><p><a href='${data.vercel_url}' target='_blank'>Live App</a> | <a href='${data.github_url}' target='_blank'>GitHub Repo</a></p></div>`;
+            } else {
+                appendLog("Deployment failed: " + data.error, false, true);
+            }
+        }
+    </script>
+</body>
+</html>
