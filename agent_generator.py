@@ -20,7 +20,7 @@ class PortfolioState(TypedDict):
 # ==========================================
 # 2. DEFINE THE GENERATOR AGENT NODE
 # ==========================================
-# We use a slightly more creative/higher temperature model here for design
+# We use a slightly more creative/higher temperature model here for designing
 llm = ChatOpenAI(model="gpt-4o", temperature=0.4)
 
 def generator_node(state: PortfolioState):
