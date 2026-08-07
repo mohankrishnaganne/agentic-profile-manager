@@ -1,0 +1,11 @@
+flask
+redis
+requests
+PyPDF2
+langchain
+langchain-core
+langchain-google-genai
+langgraph
+python-dotenv
+werkzeug
+gunicorn
