@@ -22,14 +22,14 @@ def index():
 
 @app.route('/login/github')
 def login_github():
-    return redirect(f"https://github.com/login/oauth/authorize?client_id={Config.GITHUB_CLIENT_ID}&scope=repo")
+    return redirect(f"https://github.com/login/oauth/authorize?client_id={Config.GH_CLIENT_ID}&scope=repo")
 
 @app.route('/callback/github')
 def callback_github():
     code = request.args.get('code')
     res = requests.post(
         'https://github.com/login/oauth/access_token',
-        data={'client_id': Config.GITHUB_CLIENT_ID, 'client_secret': Config.GITHUB_CLIENT_SECRET, 'code': code},
+        data={'client_id': Config.GH_CLIENT_ID, 'client_secret': Config.GH_CLIENT_SECRET, 'code': code},
         headers={'Accept': 'application/json'},
         timeout=10
     )

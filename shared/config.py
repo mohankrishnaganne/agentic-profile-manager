@@ -11,7 +11,7 @@ class Config:
     TASK_QUEUE = "task_queue"
     
     # OAuth Credentials
-    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
+    GH_CLIENT_ID = os.getenv("GH_CLIENT_ID", "")
     GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
     VERCEL_CLIENT_ID = os.getenv("VERCEL_CLIENT_ID", "")
     VERCEL_CLIENT_SECRET = os.getenv("VERCEL_CLIENT_SECRET", "")
