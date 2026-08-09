@@ -14,11 +14,16 @@ app.secret_key = Config.FLASK_SECRET_KEY
 
 r = redis.Redis(host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0)
 
+# @app.route('/')
+# def index():
+#     if 'session_id' not in session:
+#         session['session_id'] = str(uuid.uuid4())
+#     return render_template('index.html')
+
 @app.route('/')
-def index():
-    if 'session_id' not in session:
-        session['session_id'] = str(uuid.uuid4())
-    return render_template('index.html')
+def health_check():
+    return "Healthy", 200
+
 
 @app.route('/login/github')
 def login_github():
