@@ -12,7 +12,7 @@ class Config:
     
     # OAuth Credentials
     GH_CLIENT_ID = os.getenv("GH_CLIENT_ID", "")
-    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
+    GH_CLIENT_SECRET = os.getenv("GH_CLIENT_SECRET", "")
     VERCEL_CLIENT_ID = os.getenv("VERCEL_CLIENT_ID", "")
     VERCEL_CLIENT_SECRET = os.getenv("VERCEL_CLIENT_SECRET", "")
     
