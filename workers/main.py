@@ -8,7 +8,14 @@ from shared.config import Config
 from shared.file_handler import extract_text_from_pdf
 from workers.graph import portfolio_app
 
-r = redis.Redis(host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0)
+r = redis.Redis(
+    host=Config.REDIS_HOST,
+    port=Config.REDIS_PORT,
+    db=0,
+    ssl=True,
+    socket_timeout=5,
+    socket_connect_timeout=5
+)
 
 def emit_event(job_id: str, event_type: str, data: dict):
     payload = json.dumps({"job_id": job_id, "type": event_type, "data": data})
