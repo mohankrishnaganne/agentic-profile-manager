@@ -12,7 +12,14 @@ from shared.file_handler import save_uploaded_file
 app = Flask(__name__, template_folder="templates")
 app.secret_key = Config.FLASK_SECRET_KEY
 
-r = redis.Redis(host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0)
+r = redis.Redis(
+    host=Config.REDIS_HOST,
+    port=Config.REDIS_PORT,
+    db=0,
+    ssl=True,
+    socket_timeout=5,
+    socket_connect_timeout=5
+)
 
 @app.route('/')
 def index():

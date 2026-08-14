@@ -1,16 +1,24 @@
 import os
+import boto3
 import PyPDF2
 from werkzeug.utils import secure_filename
 from shared.config import Config
 
-os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
+# Retrieve the bucket name we configured in your ECS task definition
+S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'agentic-profile-uploads-wichita')
 
 def save_uploaded_file(file_obj) -> str:
-    """Saves incoming werkzeug FileStorage object to ephemeral disk."""
+    """Uploads incoming file directly to Amazon S3 and returns the object key."""
     filename = secure_filename(file_obj.filename)
-    filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
-    file_obj.save(filepath)
-    return filepath
+    
+    # Initialize the AWS S3 client
+    s3_client = boto3.client('s3')
+    
+    # Upload the file stream directly to S3 without saving it locally first
+    s3_client.upload_fileobj(file_obj, S3_BUCKET_NAME, filename)
+    
+    # Return the S3 key (filename) so the worker knows exactly what to download
+    return filename
 
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extracts raw string content from a PDF document."""
