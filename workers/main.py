@@ -23,7 +23,7 @@ def emit_event(job_id: str, event_type: str, data: dict):
 
 def process_job(job_data: dict):
     job_id = job_data.get("job_id")
-    
+    print("Hello from worker! Processing job:", job_id, flush=True)
     # NEW: Extract the unique thread_id (fallback to job_id if not present)
     thread_id = job_data.get("thread_id", job_id) 
     
