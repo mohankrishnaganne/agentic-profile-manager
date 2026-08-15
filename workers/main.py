@@ -13,8 +13,8 @@ r = redis.Redis(
     port=Config.REDIS_PORT,
     db=0,
     ssl=True,
-    socket_timeout=5,
-    socket_connect_timeout=5
+    socket_timeout=60,         # Increased to 60 seconds
+    socket_connect_timeout=10  # Connect timeout can stay short
 )
 
 def emit_event(job_id: str, event_type: str, data: dict):
