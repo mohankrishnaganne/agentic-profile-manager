@@ -1,6 +1,7 @@
 import os
 import boto3
 import PyPDF2
+import time
 from werkzeug.utils import secure_filename
 from shared.config import Config
 
@@ -9,17 +10,16 @@ S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'agentic-profile-uploads-wichita')
 
 def save_uploaded_file(file_obj) -> str:
     """Uploads incoming file directly to Amazon S3 and returns the object key."""
-    filename = secure_filename(file_obj.filename)
+    # Prepend the current exact timestamp to guarantee a unique S3 key
+    safe_name = secure_filename(file_obj.filename)
+    unique_filename = f"{int(time.time())}_{safe_name}"
     
-    # Initialize the AWS S3 client
     s3_client = boto3.client('s3')
-    print(f"Uploading file to S3 bucket '{S3_BUCKET_NAME}' with key '{filename}'", flush=True)
+    print(f"Uploading file to S3 bucket '{S3_BUCKET_NAME}' with key '{unique_filename}'", flush=True)
     
-    # Upload the file stream directly to S3 without saving it locally first
-    s3_client.upload_fileobj(file_obj, S3_BUCKET_NAME, filename)
+    s3_client.upload_fileobj(file_obj, S3_BUCKET_NAME, unique_filename)
     
-    # Return the S3 key (filename) so the worker knows exactly what to download
-    return filename
+    return unique_filename
 
 def extract_text_from_pdf(filename: str) -> str:
     """Downloads the PDF from S3 to the worker container, then extracts the text."""
