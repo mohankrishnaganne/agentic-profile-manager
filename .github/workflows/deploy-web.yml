@@ -2,7 +2,7 @@ name: Deploy Web API to ECS
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "DevBranch1.0" ]
     paths:
       - 'web/**'
       - 'shared/**'

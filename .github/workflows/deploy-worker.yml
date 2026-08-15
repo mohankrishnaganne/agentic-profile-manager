@@ -2,7 +2,7 @@ name: Deploy AI Worker to ECS
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "DevBranch1.0" ]
     paths:
       - 'workers/**'
       - 'shared/**'
