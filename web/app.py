@@ -72,10 +72,10 @@ def callback_vercel():
 def upload_and_generate():
     if 'resume' not in request.files or request.files['resume'].filename == '':
         return jsonify({"error": "No file uploaded"}), 400
-
+    print("i'm here")
     file_obj = request.files['resume']
     filepath = save_uploaded_file(file_obj)
-    
+    print(f"File uploaded to S3 with key: {filepath}")
     # job_id keeps the live logs streaming to your current browser window
     job_id = session.get('session_id', str(uuid.uuid4()))
     
