@@ -8,5 +8,5 @@ langchain-google-genai
 langgraph
 python-dotenv
 werkzeug
-boto3
 gunicorn
+boto3
