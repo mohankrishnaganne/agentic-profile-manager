@@ -13,7 +13,7 @@ def save_uploaded_file(file_obj) -> str:
     
     # Initialize the AWS S3 client
     s3_client = boto3.client('s3')
-    print(f"Uploading file to S3 bucket '{S3_BUCKET_NAME}' with key '{filename}'")
+    print(f"Uploading file to S3 bucket '{S3_BUCKET_NAME}' with key '{filename}'", flush=True)
     # Upload the file stream directly to S3 without saving it locally first
     s3_client.upload_fileobj(file_obj, S3_BUCKET_NAME, filename)
     

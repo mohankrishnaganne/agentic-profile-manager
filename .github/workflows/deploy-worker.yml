@@ -8,6 +8,7 @@ on:
       - 'shared/**'
       - '.aws/worker-task-def.json'
       - '.github/workflows/deploy-worker.yml'
+      - 'requirements.txt'
 
 env:
   AWS_REGION: us-east-1                   
