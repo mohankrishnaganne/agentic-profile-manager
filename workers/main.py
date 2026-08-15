@@ -1,6 +1,7 @@
 import json
 import time
 import redis
+import uuid
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -36,8 +37,9 @@ def process_job(job_data: dict):
             filepath = job_data.get("filepath")
             resume_text = extract_text_from_pdf(filepath)
             
-            # UPDATE: Use the unique thread_id to force LangGraph to start with a blank memory
-            config = {"configurable": {"thread_id": thread_id}} 
+            # FORCE A CLEAN SLATE: Generate a random UUID so it never reuses old memory
+            unique_thread_id = str(uuid.uuid4())
+            config = {"configurable": {"thread_id": unique_thread_id}} 
             
             initial_state = {
                 "resume_path": filepath,
