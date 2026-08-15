@@ -8,6 +8,7 @@ on:
       - 'shared/**'
       - '.aws/web-task-def.json'
       - '.github/workflows/deploy-web.yml'
+      - 'requirements.txt'
 
 env:
   AWS_REGION: us-east-1                   
